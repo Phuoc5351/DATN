@@ -192,7 +192,7 @@ onUnmounted(() => {
             </div>
               <button
                   class="mt-4 w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-in-out">
-                Xem chi tiết 
+                Xem chi tiết
               </button>
           </div>
         </div>
