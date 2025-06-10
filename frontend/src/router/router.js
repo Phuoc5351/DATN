@@ -5,36 +5,63 @@ import HomeComponent from "@/components/HomeComponent.vue";
 import ForgotPassword from "@/components/ForgotPassword.vue";
 import ResetPassword from '@/components/ResetPassword.vue'
 import Details from '@/components/Details.vue'
+import EventManagement from "@/components/EventManagement.vue";
+import UserManagement from "@/components/UserManangement.vue";
+import AdminDashboard from "@/components/AdminDashboard.vue";
 const routes = [
     {
         path: '/',
         name: 'Home',
         component: HomeComponent,
+        meta: { layout: 'HomeLayout' }
     },
     {
         path: '/login',
         name: 'Login',
         component: LoginComponent,
+        meta: { layout: 'HomeLayout' }
     },
     {
         path: '/register',
         name: 'Register',
         component: RegisterComponent,
+        meta: { layout: 'HomeLayout' }
     },
     {
         path: '/forgetpassword',
-        name: 'Forget Password',
+        name: 'ForgetPassword',
         component: ForgotPassword,
+        meta: { layout: 'HomeLayout' }
     },
     {
         path: '/resetpassword',
-        name: 'Reset Password',
+        name: 'ResetPassword',
         component: ResetPassword,
+        meta: { layout: 'HomeLayout' }
     },
     {
         path: '/details',
         name: 'Details',
         component: Details,
+        meta: { layout: 'HomeLayout' }
+    },
+    {
+        path: '/admin',
+        name: 'AdminDashboard',
+        component: AdminDashboard,
+        meta: { layout: 'AdminLayout' }
+    },
+    {
+        path: '/admin/events',
+        name: 'AdminEventManagement',
+        component: EventManagement,
+        meta: { layout: 'AdminLayout' }
+    },
+    {
+        path: '/admin/users',
+        name: 'UserManagement',
+        component: UserManagement,
+        meta: { layout: 'AdminLayout' }
     },
 ];
 
