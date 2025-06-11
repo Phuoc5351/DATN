@@ -1,62 +1,8 @@
 <script setup>
 import {ref, onMounted, onUnmounted} from 'vue';
+import {eventsHomeDetails} from '@/components/data.js'
 
-const events = ref([
-  {
-    id: 1,
-    name: 'Sự kiện Âm nhạc A',
-    location: 'Sân vận động Mỹ Đình, Hà Nội',
-    time: '20:00 - 28/07/2025',
-    price: 'Từ 500.000đ',
-    image: 'https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-    endsIn: {days: 15, hours: 6, minutes: 35, seconds: 3}
-  },
-  {
-    id: 2,
-    name: 'Lễ hội EDM B',
-    location: 'Quận 1, TP.HCM',
-    time: '21:00 - 04/08/2025',
-    price: 'Từ 750.000đ',
-    image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-    endsIn: {days: 15, hours: 6, minutes: 35, seconds: 3}
-  },
-  {
-    id: 3,
-    name: 'Show diễn Thời trang C',
-    location: 'Trung tâm Hội nghị Quốc gia',
-    time: '19:30 - 11/08/2025',
-    price: 'Từ 1.400.000đ',
-    image: 'https://images.unsplash.com/photo-1505236858219-8359eb29e329?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1562&q=80',
-    endsIn: {days: 15, hours: 6, minutes: 35, seconds: 3}
-  },
-  {
-    id: 4,
-    name: 'Đại nhạc hội D',
-    location: 'Cung thể thao Quần Ngựa',
-    time: '20:00 - 18/08/2025',
-    price: 'Từ 1.200.000đ',
-    image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-    endsIn: {days: 15, hours: 6, minutes: 35, seconds: 3}
-  },
-  {
-    id: 5,
-    name: 'Liveshow Ca sĩ E',
-    location: 'Nhà hát Lớn Hà Nội',
-    time: '20:00 - 25/08/2025',
-    price: 'Từ 800.000đ',
-    image: 'https://addevent.vn/wp-content/uploads/2024/06/concert-1.jpg',
-    endsIn: {days: 15, hours: 6, minutes: 35, seconds: 3}
-  },
-  {
-    id: 6,
-    name: 'Rock Fest F',
-    location: 'Sân vận động Phú Thọ, TP.HCM',
-    time: '18:00 - 01/09/2025',
-    price: 'Từ 600.000đ',
-    image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-    endsIn: {days: 15, hours: 6, minutes: 35, seconds: 3}
-  },
-]);
+const events = ref(eventsHomeDetails)
 
 
 const featuredCarousel = ref(null);
@@ -190,10 +136,12 @@ onUnmounted(() => {
                 </p>
               </div>
             </div>
-              <button
-                  class="mt-4 w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-in-out">
-                Xem chi tiết
-              </button>
+            <router-link
+                :to="`/details/${event.id}`"
+                class="mt-4 block text-center w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-in-out"
+            >
+              Xem chi tiết
+            </router-link>
           </div>
         </div>
 
@@ -336,7 +284,7 @@ onUnmounted(() => {
               <h3 class="text-lg font-bold text-gray-900 truncate">
                 {{ event.name }}
               </h3>
-              <p class="text-sm text-gray-600 mt-2 flex items-center gap-1">
+              <p class="text-sm text-gray-600 mt-2 flex items-center gap-1 whitespace-nowrap">
                 <svg class="w-4 h-4  text-indigo-500" fill="none" viewBox="0 0 24 24"
                      stroke-width="2" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round"
@@ -365,11 +313,12 @@ onUnmounted(() => {
             </div>
 
             <div class="bg-gray-50 px-4 py-3 border-t border-gray-100">
-              <button
-                  class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-300"
+              <router-link
+                  :to="`/details/${event.id}`"
+                  class="mt-4 block text-center w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg "
               >
                 Đặt ngay
-              </button>
+              </router-link>
             </div>
           </div>
         </div>
@@ -470,11 +419,12 @@ onUnmounted(() => {
             </div>
 
             <div class="bg-gray-50 px-4 py-3 border-t border-gray-100">
-              <button
-                  class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-300"
+              <router-link
+                  :to="`/details/${event.id}`"
+                  class="mt-4 block text-center w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg"
               >
                 Đặt ngay
-              </button>
+              </router-link>
             </div>
           </div>
         </div>

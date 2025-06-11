@@ -20,7 +20,7 @@
 
         <div class="absolute top- -bottom-3 -right-4 md:-right-8 top-4 md:top-1/2 transform md:-translate-y-1/2 z-20">
 
-          <div class="absolute  -bottom-20 w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-dashed border-black relative z-40"
+          <div class="relative -bottom-20 w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-dashed border-black  z-40"
                style="clip-path: inset(0 40% 0 0);">
           </div>
           <div class="relative w-16 h-16 md:w-20 md:h-20 rounded-full bg-white flex items-center justify-center shadow-md z-20">
@@ -29,10 +29,9 @@
           </div>
         </div>
         <div class="pr-12 md:pr-0">
-          <h3 class="text-3xl md:text-5xl font-bold mb-3 md:mb-4">BLACKPINK THE VIRTUAL</h3>
-          <p class="text-base md:text-lg">PUBG MOBILE x BLACKPINK</p>
-          <p class="text-base md:text-lg mt-3 md:mt-4">Ngày tổ chức: 22-24 & 29-31 JULY 2022</p>
-          <p class="text-base md:text-lg">Địa điểm: Trực tuyến trong PUBG</p>
+          <h3 class="text-3xl md:text-5xl font-bold mb-3 md:mb-4">{{events.name}}</h3>
+          <p class="text-base md:text-lg mt-3 md:mt-4">Thời gian: {{events.time}}</p>
+          <p class="text-base md:text-lg">Địa điểm: {{events.location}}</p>
         </div>
 
         <div class="mt-4 md:mt-6 relative z-30">
@@ -58,11 +57,12 @@
       <div class="w-full h-1 md:w-1 md:h-auto border-b-2 md:border-r-2 border-dashed border-white relative z-0 md:-ml-0.5 -mt-0.5 md:-mt-0.5 md:my-auto"></div>
 
 
-      <div class="w-full md:w-4/3 relative"> <img
-          src="../assets/BLACKPINK_The_Virtual_Banner.jpg"
-          alt="Event Poster"
-          class="w-full h-auto md:h-full object-cover"
-      />
+      <div class="w-full md:w-4/3 relative">
+        <img
+            :src="events.image"
+            :alt="events.name"
+            class="w-full h-auto md:h-full object-cover"
+        />
       </div>
     </div>
     </div>
@@ -77,7 +77,7 @@
           :class="[isExpanded ? 'max-h-full' : 'max-h-28 mask-fade-bottom', 'transition-all duration-30 ease-in-out overflow-hidden']"
       >
         <p class="text-sm md:text-base leading-relaxed text-gray-700">
-          Chào mừng bạn đến với sự kiện BLACKPINK THE VIRTUAL! Đây là một trải nghiệm âm nhạc độc đáo, đưa bạn vào thế giới ảo của PUBG MOBILE cùng nhóm nhạc nữ toàn cầu BLACKPINK. Bạn sẽ có cơ hội tham gia vào các buổi hòa nhạc ảo hoành tráng, tương tác với các thành viên và khám하거나 những nội dung độc quyền chưa từng được công bố. Sự kiện hứa hẹn mang đến những màn trình diễn đỉnh cao, hiệu ứng hình ảnh sống động và âm thanh chân thực, phá vỡ mọi giới hạn của một buổi concert truyền thống. Hãy sẵn sàng hòa mình vào không khí sôi động, kết nối với cộng đồng BLINKs trên toàn thế giới và tạo nên những kỷ niệm khó quên. Đừng bỏ lỡ cơ hội trở thành một phần của lịch sử âm nhạc ảo này! Sự kiện cũng sẽ có các mini-game và phần thưởng đặc biệt dành cho những người tham gia may mắn. Hãy chắc chắn rằng bạn đã cập nhật phiên bản PUBG MOBILE MOBILE mới nhất để có trải nghiệm tốt nhất. Chúng tôi rất mong được gặp bạn tại BLACKPINK THE VIRTUAL!
+          {{events.description}}
         </p>
       </div>
 
@@ -215,6 +215,13 @@ const isExpanded = ref(false);
 const toggleExpand = () => {
   isExpanded.value = !isExpanded.value;
 };
+
+import { useRoute } from 'vue-router'
+import { eventsHomeDetails } from '@/components/data.js'
+
+const route = useRoute()
+const eventId = parseInt(route.params.id)
+const events = eventsHomeDetails.find(e => e.id === eventId)
 // Dán đoạn code này vào trong thẻ <script setup>
 
 const suggestedEvents = ref([

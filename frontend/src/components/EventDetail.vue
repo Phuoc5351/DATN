@@ -279,8 +279,8 @@ const activeTickets = ref(new Set());
 // selectedTickets với số lượng vé mặc định như hình ảnh
 const selectedTickets = ref({
   'slot1': {
-    'ticket1': 9, // REGULAR TICKET: 9 vé
-    'ticket3': 1  // COMBO 10 REGULAR TICKET: 1 vé
+    'ticket1': 0, // REGULAR TICKET: 9 vé
+    'ticket3': 0  // COMBO 10 REGULAR TICKET: 1 vé
   }
 });
 
