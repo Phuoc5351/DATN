@@ -42,7 +42,7 @@ const routes = [
         meta: { layout: 'HomeLayout' }
     },
     {
-        path: '/details',
+        path: '/details/:id',
         name: 'Details',
         component: Details,
         meta: { layout: 'HomeLayout' }
