@@ -279,8 +279,8 @@ const activeTickets = ref(new Set());
 // selectedTickets với số lượng vé mặc định như hình ảnh
 const selectedTickets = ref({
   'slot1': {
-    'ticket1': 9, // REGULAR TICKET: 9 vé
-    'ticket3': 1  // COMBO 10 REGULAR TICKET: 1 vé
+    'ticket1': 0, // REGULAR TICKET: 9 vé
+    'ticket3': 0  // COMBO 10 REGULAR TICKET: 1 vé
   }
 });
 
@@ -326,50 +326,70 @@ const getTicketStatusClass = (isSoldOut) => {
 };
 
 const updateTicketQuantity = (slotId, ticketId, change) => {
+  // Nếu suất chiếu (slotId) chưa có trong danh sách đã chọn, hãy tạo nó.
   if (!selectedTickets.value[slotId]) {
     selectedTickets.value[slotId] = {};
   }
 
+  // Lấy số lượng hiện tại của vé, nếu chưa có thì mặc định là 0.
   let currentQuantity = selectedTickets.value[slotId][ticketId] || 0;
   let newQuantity;
 
+  // Xử lý việc tăng/giảm số lượng hoặc đặt một giá trị cụ thể.
   if (typeof change === 'number' && (change === 1 || change === -1)) {
+    // Tăng hoặc giảm 1
     newQuantity = currentQuantity + change;
   } else if (typeof change === 'number' && change >= 0) {
+    // Đặt một số lượng cụ thể (ví dụ: từ một ô input)
     newQuantity = change;
   } else {
+    // Nếu giá trị 'change' không hợp lệ, không làm gì cả.
     return;
   }
 
+  // --- LOGIC ĐÃ ĐƯỢC ĐƠN GIẢN HÓA ---
+
+  // 1. Đảm bảo số lượng không bao giờ nhỏ hơn 0.
   if (newQuantity < 0) {
     newQuantity = 0;
   }
 
-  // Giới hạn số lượng mua tối đa 9 vé cho REGULAR, 1 vé cho COMBO 10 theo hình ảnh
-  if (ticketId === 'ticket1') { // REGULAR TICKET
-    if (newQuantity > 9) newQuantity = 9;
-  } else if (ticketId === 'ticket3') { // COMBO 10 REGULAR TICKET
-    if (newQuantity > 1) newQuantity = 1;
-  }
-  // Giới hạn chung 5 vé mỗi đơn hàng nếu áp dụng cho mọi loại vé và không có combo đặc biệt.
-  // Nếu có, logic này phức tạp hơn và cần kiểm tra tổng số lượng đã chọn.
-  const maxPerOrderNote = timeSlots.value.find(s => s.id === slotId)?.tickets.find(t => t.id === ticketId)?.notes.find(note => note.includes('tối đa'));
-  if (maxPerOrderNote) {
-    const maxLimit = parseInt(maxPerOrderNote.match(/\d+/)[0]);
-    if (newQuantity > maxLimit) {
-      newQuantity = maxLimit;
-    }
+  // 2. Áp dụng giới hạn tối đa 10 vé cho TẤT CẢ các loại vé.
+  if (newQuantity > 10) {
+    newQuantity = 10;
   }
 
+  // Cập nhật số lượng mới vào danh sách đã chọn.
   selectedTickets.value[slotId][ticketId] = newQuantity;
 
+  // Nếu số lượng vé trở về 0, hãy xóa nó khỏi danh sách.
   if (newQuantity === 0) {
     delete selectedTickets.value[slotId][ticketId];
+    // Nếu không còn vé nào trong suất chiếu, hãy xóa luôn suất chiếu đó.
     if (Object.keys(selectedTickets.value[slotId]).length === 0) {
       delete selectedTickets.value[slotId];
     }
   }
 };
+  // Giới hạn chung 5 vé mỗi đơn hàng nếu áp dụng cho mọi loại vé và không có combo đặc biệt.
+  // Nếu có, logic này phức tạp hơn và cần kiểm tra tổng số lượng đã chọn.
+//   const maxPerOrderNote = timeSlots.value.find(s => s.id === slotId)?.tickets.find(t => t.id === ticketId)?.notes.find(note => note.includes('tối đa'));
+//   if (maxPerOrderNote) {
+//     const maxLimit = parseInt(maxPerOrderNote.match(/\d+/)[0]);
+//     if (newQuantity > maxLimit) {
+//       newQuantity = maxLimit;
+//     }
+//   }
+//
+//   selectedTickets.value[slotId][ticketId] = newQuantity;
+//
+//   if (newQuantity === 0) {
+//     delete selectedTickets.value[slotId][ticketId];
+//     if (Object.keys(selectedTickets.value[slotId]).length === 0) {
+//       delete selectedTickets.value[slotId];
+//     }
+//   }
+// };
 
 const getTicketName = (slotId, ticketId) => {
   const slot = timeSlots.value.find(s => s.id === slotId);

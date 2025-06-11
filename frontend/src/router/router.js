@@ -9,7 +9,7 @@ import EventManagement from "@/components/EventManagement.vue";
 import UserManagement from "@/components/UserManangement.vue";
 import AdminDashboard from "@/components/AdminDashboard.vue";
 import EventDetail  from "@/components/EventDetail.vue";
-import BookingLayout from "@/components/layout/BookingLayout.vue";
+import CreateEvent from "@/components/Organizer/CreateEvent.vue";
 const routes = [
     {
         path: '/',
@@ -70,7 +70,14 @@ const routes = [
         name: 'EventDetail',
         component: EventDetail,
         props: true,
-        meta: { layout: 'BookingLayout' } // <--- Thay đổi layout ở đây
+        meta: { layout: 'BookingLayout' }
+    },
+    {
+        path: '/CreateEvent',
+        name: 'CreateEvent',
+        component: CreateEvent,
+        props: true,
+        meta: { layout: 'BookingLayout' }
     }
 ];
 
