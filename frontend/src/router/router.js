@@ -8,6 +8,8 @@ import Details from '@/components/Details.vue'
 import EventManagement from "@/components/EventManagement.vue";
 import UserManagement from "@/components/UserManangement.vue";
 import AdminDashboard from "@/components/AdminDashboard.vue";
+import EventDetail  from "@/components/EventDetail.vue";
+import BookingLayout from "@/components/layout/BookingLayout.vue";
 const routes = [
     {
         path: '/',
@@ -63,6 +65,13 @@ const routes = [
         component: UserManagement,
         meta: { layout: 'AdminLayout' }
     },
+    {
+        path: '/EventDetail',
+        name: 'EventDetail',
+        component: EventDetail,
+        props: true,
+        meta: { layout: 'BookingLayout' } // <--- Thay đổi layout ở đây
+    }
 ];
 
 const router = createRouter({
