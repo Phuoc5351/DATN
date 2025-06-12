@@ -40,7 +40,7 @@
           <div class="w-full h-1 md:w-1 md:h-auto border-b-2 md:border-r-2 border-dashed border-white relative z-0 md:-ml-0.5 -mt-0.5 md:-mt-0.5 md:my-auto"></div>
           <div class="w-full md:w-4/3 relative">
             <img
-                src="../assets/BLACKPINK_The_Virtual_Banner.jpg"
+                src="../../assets/BLACKPINK_The_Virtual_Banner.jpg"
                 alt="Event Poster"
                 class="w-full h-auto md:h-full object-cover"
             />

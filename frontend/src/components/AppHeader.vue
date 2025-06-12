@@ -14,7 +14,7 @@
             <router-link to="/" class="text-gray-700 hover:text-indigo-600 font-medium transition-colors">Trang chủ</router-link>
             <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium transition-colors">Sự kiện</a>
             <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium transition-colors">Vé đã mua</a>
-            <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium transition-colors">Tổ chức sự kiện</a>
+            <router-link to="/CreateEvent/step1" class="text-gray-700 hover:text-indigo-600 font-medium transition-colors">Tổ chức sự kiện</router-link>
           </div>
         </div>
 
@@ -57,8 +57,19 @@
           <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium px-2 py-1">Trang chủ</a>
           <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium px-2 py-1">Sự kiện</a>
           <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium px-2 py-1">Vé đã mua</a>
-          <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium px-2 py-1">Tổ chức sự kiện</a>
+          <router-link
+              :to="`/CreateEvent/step1`"
+              class="text-gray-700 hover:text-indigo-600 font-medium px-2 py-1"
+          >
+            Tổ chức sự kiện
+          </router-link>
         </div>
+        <router-link
+            :to="`/CreateEvent/step1`"
+            class="text-gray-700 hover:text-indigo-600 font-medium px-2 py-1"
+        >
+          Tổ chức sự kiện
+        </router-link>
       </div>
 
     </div>

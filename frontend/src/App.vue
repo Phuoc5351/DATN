@@ -1,9 +1,9 @@
 <script setup>
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import HomeLayout from '@/components/layout/HomeLayout.vue';
-import AdminLayout from '@/components/layout/AdminLayout.vue';
-import BookingLayout from "@/components/layout/BookingLayout.vue";
+import HomeLayout from '@/components/AdminPage/HomeLayout.vue';
+import AdminLayout from '@/components/AdminPage/AdminLayout.vue';
+import BookingLayout from "@/components/BookingPage/BookingLayout.vue";
 
 const route = useRoute();
 

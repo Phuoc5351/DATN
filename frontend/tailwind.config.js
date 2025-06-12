@@ -2,7 +2,15 @@
 export default {
     content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
     theme: {
-        extend: {},
+        extend: {
+            colors: {
+                'brand-green': '#2ED573',
+                'brand-dark': '#1C1D1F',
+            },
+            spacing: {
+                '280px': '280px', // Thêm độ rộng của sidebar
+            }
+        },
     },
     plugins: [
         function ({ addUtilities }) {
