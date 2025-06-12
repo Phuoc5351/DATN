@@ -70,7 +70,7 @@ function navigateToEventsPage(event) {
               <p class="font-semibold">{{ event.name }}</p>
               <p class="text-xs text-gray-500">Người gửi: {{ event.requester }}</p>
             </td>
-            <td class="py-3 px-2 text-gray-600 text-right">{{ event.date }}</td>
+            <td class="py-3 px-2 text-gray-600 text-right">{{ event.submitDate }}</td>
           </tr>
           <tr v-if="pendingEvents.length === 0">
             <td colspan="2" class="text-center py-4 text-gray-500">Không có sự kiện nào cần duyệt.</td>
@@ -95,7 +95,7 @@ function navigateToEventsPage(event) {
           <tbody>
           <tr v-for="event in upcomingEvents" :key="event.id" class="border-b hover:bg-gray-50">
             <td class="py-3 px-2 font-semibold">{{ event.name }}</td>
-            <td class="py-3 px-2 text-gray-600">{{ event.date }}</td>
+            <td class="py-3 px-2 text-gray-600">{{ event.time }}</td>
             <td class="py-3 px-2 text-gray-600">{{ event.location }}</td>
             <td class="py-3 px-2 font-bold">{{ event.ticketsSold }}</td>
           </tr>
