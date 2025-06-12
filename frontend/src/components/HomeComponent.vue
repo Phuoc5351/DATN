@@ -1,9 +1,11 @@
 <script setup>
-import {ref, onMounted, onUnmounted} from 'vue';
-import {eventsHomeDetails} from '@/components/data.js'
+import {ref, onMounted, onUnmounted, computed} from 'vue';
+import {events} from '@/components/data.js'
 
-const events = ref(eventsHomeDetails)
 
+const featuredEvents = computed(() =>
+    events.value.filter(event => event.status === 'approved' && event.featured)
+);
 
 const featuredCarousel = ref(null);
 const upcomingCarousel = ref(null);
@@ -103,7 +105,7 @@ onUnmounted(() => {
            class="flex overflow-x-auto snap-x snap-mandatory space-x-4 md:space-x-6 px-4 sm:px-6 lg:px-8 scrollbar-hide -mx-4 sm:-mx-6 lg:-mx-8 py-4">
 
         <div
-            v-for="event in events"
+            v-for="event in featuredEvents"
             :key="event.id"
             class="group relative flex-shrink-0 w-[85vw] sm:w-72 md:w-80 h-[420px] bg-slate-800 rounded-2xl shadow-lg overflow-hidden snap-start transition-all duration-300"
         >
@@ -237,7 +239,7 @@ onUnmounted(() => {
 
       <div ref="upcomingCarousel" class="mt-10 flex overflow-x-auto space-x-6 pb-4 scrollbar-hide">
         <div
-            v-for="event in events"
+            v-for="event in featuredEvents"
             :key="event.id"
             class="flex-shrink-0 w-64 sm:w-72"
         >
@@ -351,7 +353,7 @@ onUnmounted(() => {
       </div>
       <div ref="onGoingCarsousel" class="mt-10 flex overflow-x-auto space-x-6 pb-4 scrollbar-hide">
         <div
-            v-for="event in events"
+            v-for="event in featuredEvents"
             :key="event.id"
             class="flex-shrink-0 w-64 sm:w-72"
         >
@@ -421,7 +423,7 @@ onUnmounted(() => {
             <div class="bg-gray-50 px-4 py-3 border-t border-gray-100">
               <router-link
                   :to="`/details/${event.id}`"
-                  class="mt-4 block text-center w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg"
+                  class="mt-4 block text-center w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg "
               >
                 Đặt ngay
               </router-link>

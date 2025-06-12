@@ -29,9 +29,9 @@
           </div>
         </div>
         <div class="pr-12 md:pr-0">
-          <h3 class="text-3xl md:text-5xl font-bold mb-3 md:mb-4">{{events.name}}</h3>
-          <p class="text-base md:text-lg mt-3 md:mt-4">Thời gian: {{events.time}}</p>
-          <p class="text-base md:text-lg">Địa điểm: {{events.location}}</p>
+          <h3 class="text-3xl md:text-5xl font-bold mb-3 md:mb-4">{{event.name}}</h3>
+          <p class="text-base md:text-lg mt-3 md:mt-4">Thời gian: {{event.time}}</p>
+          <p class="text-base md:text-lg">Địa điểm: {{event.location}}</p>
         </div>
 
         <div class="mt-4 md:mt-6 relative z-30">
@@ -59,8 +59,8 @@
 
       <div class="w-full md:w-4/3 relative">
         <img
-            :src="events.image"
-            :alt="events.name"
+            :src="event.image"
+            :alt="event.name"
             class="w-full h-auto md:h-full object-cover"
         />
       </div>
@@ -77,7 +77,7 @@
           :class="[isExpanded ? 'max-h-full' : 'max-h-28 mask-fade-bottom', 'transition-all duration-30 ease-in-out overflow-hidden']"
       >
         <p class="text-sm md:text-base leading-relaxed text-gray-700">
-          {{events.description}}
+          {{event.description}}
         </p>
       </div>
 
@@ -208,21 +208,20 @@
   </template>
 
 <script setup>
-import { ref } from 'vue';
-
-// Existing state variables
+import { ref, computed } from 'vue';
 const isExpanded = ref(false);
 const toggleExpand = () => {
   isExpanded.value = !isExpanded.value;
 };
+import {events} from '@/components/data.js'
 
-import { useRoute } from 'vue-router'
-import { eventsHomeDetails } from '@/components/data.js'
-
-const route = useRoute()
-const eventId = parseInt(route.params.id)
-const events = eventsHomeDetails.find(e => e.id === eventId)
-// Dán đoạn code này vào trong thẻ <script setup>
+const props = defineProps({
+  id: [String, Number]
+})
+const eventId = parseInt(props.id)
+const event = computed(() => {
+  return events.value.find(e => e.id === eventId)
+})
 
 const suggestedEvents = ref([
   // Dòng 1

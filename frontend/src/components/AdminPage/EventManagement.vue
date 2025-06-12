@@ -1,6 +1,12 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { events, pendingEvents, approveEvent, rejectEvent } from '@/components/data.js';
+import {ref, computed} from 'vue';
+import {
+  events,
+  pendingEvents,
+  approveEvent,
+  rejectEvent,
+  toggleFeatured
+} from '@/components/data.js';
 
 const filterStatus = ref('all');
 
@@ -46,14 +52,14 @@ const pendingEventsCount = computed(() => pendingEvents.value.length);
     </div>
 
     <div class="overflow-x-auto shadow rounded-lg bg-white">
-      <table class="hidden md:table w-full divide-y divide-gray-200">
-        <thead class="bg-gray-100">
+      <table class="hidden md:table w-full text-sm text-left text-gray-700 bg-white rounded-xl shadow overflow-hidden">
+        <thead class="bg-gray-50 text-gray-600 uppercase text-xs tracking-wider">
         <tr>
-          <th class="text-left px-6 py-3 text-sm font-semibold text-gray-600 uppercase">Tên sự kiện</th>
-          <th class="text-left px-6 py-3 text-sm font-semibold text-gray-600 uppercase">Người tạo</th>
-          <th class="text-left px-6 py-3 text-sm font-semibold text-gray-600 uppercase">Ngày gửi</th>
-          <th class="text-left px-6 py-3 text-sm font-semibold text-gray-600 uppercase">Trạng thái</th>
-          <th class="text-left px-6 py-3 text-sm font-semibold text-gray-600 uppercase">Hành động</th>
+          <th class="px-6 py-4">Tên sự kiện</th>
+          <th class="px-6 py-4">Người tạo</th>
+          <th class="px-6 py-4">Ngày gửi</th>
+          <th class="px-6 py-4">Trạng thái</th>
+          <th class="px-6 py-4">Hành động</th>
         </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
@@ -63,98 +69,185 @@ const pendingEventsCount = computed(() => pendingEvents.value.length);
         <tr
             v-for="event in filteredEvents"
             :key="event.id"
-            class="hover:bg-gray-50 transition-colors"
+            class="hover:bg-gray-50 transition"
         >
-          <td class="px-6 py-4 text-gray-800 font-medium">{{ event.name }}</td>
-          <td class="px-6 py-4 text-gray-700">{{ event.requester }}</td>
-          <td class="px-6 py-4 text-gray-700">{{ event.date }}</td>
+          <td class="px-6 py-4 font-medium text-gray-900">{{ event.name }}</td>
+          <td class="px-6 py-4">{{ event.requester }}</td>
+          <td class="px-6 py-4">{{ event.submitDate }}</td>
           <td class="px-6 py-4">
-              <span
-                  :class="{
-                  'bg-yellow-100 text-yellow-700': event.status === 'pending',
-                  'bg-green-100 text-green-700': event.status === 'approved',
-                  'bg-red-100 text-red-700': event.status === 'rejected'
-                }"
-                  class="px-3 py-1 text-xs font-semibold rounded-full"
-              >
-                {{ event.status === 'pending' ? 'Chờ duyệt' : event.status === 'approved' ? 'Đã duyệt' : 'Đã từ chối' }}
-              </span>
+        <span
+            :class="{
+            'bg-yellow-100 text-yellow-700': event.status === 'pending',
+            'bg-green-100 text-green-700': event.status === 'approved',
+            'bg-red-100 text-red-700': event.status === 'rejected'
+          }"
+            class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold"
+        >
+          <svg
+              v-if="event.status === 'pending'"
+              class="w-3.5 h-3.5"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+          >
+            <circle cx="10" cy="10" r="6"/>
+          </svg>
+          <svg
+              v-if="event.status === 'approved'"
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+          <svg
+              v-if="event.status === 'rejected'"
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          {{ event.status === 'pending' ? 'Chờ duyệt' : event.status === 'approved' ? 'Đã duyệt' : 'Đã từ chối' }}
+        </span>
           </td>
-          <td class="px-6 py-4">
-            <template v-if="event.status === 'pending'">
-              <button
-                  @click="approveEvent(event.id)"
-                  class="bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-1 px-3 rounded-md mr-2 transition"
-              >
-                Duyệt
-              </button>
-              <button
-                  @click="rejectEvent(event.id)"
-                  class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-1 px-3 rounded-md transition"
-              >
-                Từ chối
-              </button>
-            </template>
+          <td class="px-6 py-4 space-x-2">
             <button
-                v-else
-                class="text-blue-600 hover:underline text-sm transition"
+                v-if="event.status === 'pending'"
+                @click="approveEvent(event.id)"
+                class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 text-xs font-medium transition-all duration-200"
             >
-              Xem chi tiết
+              ✅ <span>Duyệt</span>
+            </button>
+
+            <button
+                v-if="event.status === 'pending'"
+                @click="rejectEvent(event.id)"
+                class="inline-flex items-center gap-1 px-3 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 text-xs font-medium transition-all duration-200"
+            >
+              ❌ <span>Từ chối</span>
+            </button>
+
+            <button
+                v-if="event.status !== 'pending'"
+                @click="viewDetails(event.id)"
+                class="inline-flex items-center gap-1 px-3 py-1.5 border border-blue-500 text-blue-600 rounded-md bg-white hover:bg-blue-50 text-xs font-medium transition-all duration-200"
+            >
+              📄 <span>Xem chi tiết</span>
+            </button>
+
+            <button
+                v-if="event.status !== 'pending' && event.status !== 'rejected'"
+                @click="toggleFeatured(event.id)"
+                :class="['inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200',
+                event.featured? 'bg-purple-500 text-white hover:bg-purple-600': 'bg-gray-200 text-gray-800 hover:bg-gray-300' ]"
+            >
+              {{ event.featured ? '🌐 Bỏ khỏi trang chủ' : '📌 Hiển thị trang chủ' }}
             </button>
           </td>
+
         </tr>
         </tbody>
       </table>
+    </div>
 
-      <!-- Card layout for small screens -->
-      <div class="md:hidden divide-y divide-gray-100">
-        <div v-if="filteredEvents.length === 0" class="text-center py-6 text-gray-500">
-          Không có sự kiện nào.
-        </div>
-        <div
-            v-for="event in filteredEvents"
-            :key="event.id"
-            class="p-4 border-b hover:bg-gray-50 transition-colors"
+    <div class="md:hidden space-y-4 mt-4">
+      <div
+          v-for="event in filteredEvents"
+          :key="event.id"
+          class="bg-white p-4 rounded-lg shadow space-y-2"
+      >
+        <div class="flex justify-between items-center">
+          <h2 class="font-semibold text-gray-800 text-lg">{{ event.name }}</h2>
+          <span
+              :class="{
+          'bg-yellow-100 text-yellow-700': event.status === 'pending',
+          'bg-green-100 text-green-700': event.status === 'approved',
+          'bg-red-100 text-red-700': event.status === 'rejected'
+        }"
+              class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold"
+          >
+        <svg
+            v-if="event.status === 'pending'"
+            class="w-3.5 h-3.5"
+            fill="currentColor"
+            viewBox="0 0 20 20"
         >
-          <h2 class="text-lg font-semibold text-gray-800">{{ event.name }}</h2>
-          <p class="text-sm text-gray-600">Người tạo: {{ event.requester }}</p>
-          <p class="text-sm text-gray-600">Ngày gửi: {{ event.date }}</p>
-          <p class="mt-1">
-            <span
-                :class="{
-                'bg-yellow-100 text-yellow-700': event.status === 'pending',
-                'bg-green-100 text-green-700': event.status === 'approved',
-                'bg-red-100 text-red-700': event.status === 'rejected'
-              }"
-                class="inline-block px-3 py-1 text-xs font-semibold rounded-full"
-            >
-              {{ event.status === 'pending' ? 'Chờ duyệt' : event.status === 'approved' ? 'Đã duyệt' : 'Đã từ chối' }}
-            </span>
-          </p>
-          <div class="mt-2">
-            <template v-if="event.status === 'pending'">
-              <button
-                  @click="approveEvent(event.id)"
-                  class="bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-1 px-3 rounded-md mr-2 transition"
-              >
-                Duyệt
-              </button>
-              <button
-                  @click="rejectEvent(event.id)"
-                  class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-1 px-3 rounded-md transition"
-              >
-                Từ chối
-              </button>
-            </template>
-            <button
-                v-else
-                class="text-blue-600 hover:underline text-sm transition"
-            >
-              Xem chi tiết
-            </button>
-          </div>
+          <circle cx="10" cy="10" r="6" />
+        </svg>
+        <svg
+            v-if="event.status === 'approved'"
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+        <svg
+            v-if="event.status === 'rejected'"
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        {{ event.status === 'pending' ? 'Chờ duyệt' : event.status === 'approved' ? 'Đã duyệt' : 'Đã từ chối' }}
+      </span>
+        </div>
+
+        <div class="text-sm text-gray-600">
+          <p><strong>Người tạo:</strong> {{ event.requester }}</p>
+          <p><strong>Ngày gửi:</strong> {{ event.submitDate }}</p>
+        </div>
+
+        <div class="flex flex-wrap gap-2 pt-2">
+          <button
+              v-if="event.status === 'pending'"
+              @click="approveEvent(event.id)"
+              class="px-3 py-1.5 bg-green-600 text-white rounded-md text-xs hover:bg-green-700 transition"
+          >
+            ✅ Duyệt
+          </button>
+
+          <button
+              v-if="event.status === 'pending'"
+              @click="rejectEvent(event.id)"
+              class="px-3 py-1.5 bg-red-500 text-white rounded-md text-xs hover:bg-red-600 transition"
+          >
+            ❌ Từ chối
+          </button>
+
+          <button
+              v-if="event.status !== 'pending'"
+              @click="viewDetails(event.id)"
+              class="px-3 py-1.5 border border-blue-500 text-blue-600 rounded-md bg-white hover:bg-blue-50 text-xs transition"
+          >
+            📄 Xem chi tiết
+          </button>
+
+          <button
+              v-if="event.status !== 'pending' && event.status !== 'rejected'"
+              @click="toggleFeatured(event.id)"
+              :class="[
+          'px-3 py-1.5 rounded-md text-xs transition',
+          event.featured
+            ? 'bg-purple-500 text-white hover:bg-purple-600'
+            : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+        ]"
+          >
+            {{ event.featured ? '🌐 Bỏ khỏi trang chủ' : '📌 Hiển thị trang chủ' }}
+          </button>
         </div>
       </div>
+
+      <p v-if="filteredEvents.length === 0" class="text-center text-gray-500 py-6">Không có sự kiện nào.</p>
     </div>
   </section>
 </template>
