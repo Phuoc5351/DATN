@@ -1,4 +1,4 @@
-<template>
+  <template>
   <footer class="bg-white border-t border-gray-200">
     <div class="container mx-auto px-6 py-12 lg:px-8 lg:py-16">
 
