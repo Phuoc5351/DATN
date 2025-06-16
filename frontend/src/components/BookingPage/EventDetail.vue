@@ -5,7 +5,7 @@
         <div class="flex flex-col md:flex-row rounded-xl overflow-hidden shadow-xl bg-white">
           <div class="relative w-full md:w-3/4 bg-[#0c0c49] flex flex-col justify-between px-4 py-6 md:px-8 md:py-10 text-white">
             <div class="absolute -bottom-3 -right-4 md:-right-8 top-4 md:top-1/2 transform md:-translate-y-1/2 z-20">
-              <div class="absolute -bottom-20 w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-dashed border-black relative z-40"
+              <div class=" relative -bottom-20 w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-dashed border-black  z-40"
                    style="clip-path: inset(0 40% 0 0);">
               </div>
               <div class="relative w-16 h-16 md:w-20 md:h-20 rounded-full bg-white flex items-center justify-center shadow-md z-20">
@@ -99,7 +99,7 @@
                       type="number"
                       :value="selectedTickets[slot.id]?.[ticket.id] || 0"
                       min="0"
-                      class="w-12 text-center bg-white text-gray-800 border-x border-gray-300 appearance-none [-moz-appearance:_textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-outer-spin-button]:m-0"
+                      class="w-12 text-center bg-white text-gray-800 border-x border-gray-300 no-spinner"
                       @input="e => updateTicketQuantity(slot.id, ticket.id, parseInt(e.target.value))"
                   />
                   <button
@@ -111,7 +111,14 @@
                 </div>
               </div>
             </div>
-            <transition name="expand">
+            <transition
+                enter-active-class="transition-all duration-300 ease-out overflow-hidden"
+                enter-from-class="max-h-0 opacity-0"
+                enter-to-class="max-h-[500px] opacity-100"
+                leave-active-class="transition-all duration-300 ease-in overflow-hidden"
+                leave-from-class="max-h-[500px] opacity-100"
+                leave-to-class="max-h-0 opacity-0"
+            >
               <div v-if="activeTickets.has(ticket.id)" class="mt-2 px-4 py-2 bg-gray-50 rounded-md text-sm text-gray-700 leading-relaxed">
                 <p>{{ ticket.detailedDescription }}</p>
                 <p class="text-xs text-gray-500 mt-2">
@@ -146,7 +153,7 @@
             </div>
 
             <div class="mb-4">
-              <div v-if="Object.keys(selectedTickets).length === 0 || !hasSelectedTickets" class="text-gray-500 text-sm text-center py-2">
+              <div v-if="!hasSelectedTickets" class="text-gray-500 text-sm text-center py-2">
                 Chưa có vé được chọn.
               </div>
               <div v-else>
@@ -168,10 +175,7 @@
             </div>
           </div>
 
-          <button
-              @click="goToPayment"
-              class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-300 mt-4"
-          >
+          <button @click="goToPayment" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-300 mt-4 disabled:bg-gray-400" :disabled="!hasSelectedTickets">
             Tiếp tục - {{ formatPrice(totalPrice) }} >>
           </button>
         </div>
@@ -184,58 +188,9 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
-const props = defineProps({
-  id: {
-    type: String,
-    required: false
-  }
-});
-
 const router = useRouter();
 
-
-const goToPayment = () => {
-  // 1. Tạo một mảng để chứa các mục trong giỏ hàng
-  const cartItems = [];
-
-  // 2. Lặp qua các vé đã chọn trong `selectedTickets`
-  for (const slotId in selectedTickets.value) {
-    for (const ticketId in selectedTickets.value[slotId]) {
-      const quantity = selectedTickets.value[slotId][ticketId];
-      if (quantity > 0) {
-        // Tìm thông tin chi tiết của vé từ `timeSlots`
-        const slot = timeSlots.value.find(s => s.id === slotId);
-        const ticketInfo = slot.tickets.find(t => t.id === ticketId);
-
-        // Thêm vào giỏ hàng với cấu trúc dữ liệu mà trang Payment mong muốn
-        cartItems.push({
-          id: `${ticketInfo.id}-${slotId}`, // Tạo id duy nhất cho từng mục
-          name: ticketInfo.name,
-          // Mô tả bao gồm số lượng và tên sự kiện
-          description: `Số lượng: ${quantity}`,
-          seatInfo: `Vé sự kiện "${slot.time.split(',')[0]}"`,
-          // Tổng giá cho loại vé này (giá vé * số lượng)
-          price: ticketInfo.rawPrice * quantity,
-          // Bạn có thể thêm ảnh vé ở đây nếu có
-          image: 'https://via.placeholder.com/80x80.png?text=Ticket',
-        });
-      }
-    }
-  }
-
-  // Nếu chưa chọn vé nào thì thông báo
-  if (cartItems.length === 0) {
-    alert('Vui lòng chọn ít nhất 1 vé để tiếp tục!');
-    return;
-  }
-
-  sessionStorage.setItem('cart', JSON.stringify(cartItems));
-
-  router.push({ name: 'PaymentPage' });
-};
-
-const suggestedEvents = ref([]);
-
+// Dữ liệu vé của bạn
 const timeSlots = ref([
   {
     id: 'slot1',
@@ -247,91 +202,48 @@ const timeSlots = ref([
         name: 'REGULAR TICKET',
         price: '755.000 đ',
         rawPrice: 755000,
-        description: 'Vé vào cửa tiêu chuẩn, không kèm theo vật phẩm.',
-        detailedDescription: 'Vé này cho phép bạn tham gia sự kiện ảo BLACKPINK THE VIRTUAL vào khung giờ đã chọn.',
-        notes: [
-          '- Với mỗi đơn hàng khán giả được mua tối đa 5 vé',
-          '- Vé thuộc hạng dùng không phân khu vực khán giả tối ưu ưu tiên vị trí đứng',
-          '- Không áp dụng ưu đãi giảm giá đi kèm của blackpink hoặc đối tác',
-          '- Quà tặng: Sticker pack, phong bì, vé giấy',
-          '- Hỗ trợ LED Livecam theo dõi toàn bộ sự kiện'
-        ],
+        image: 'https://via.placeholder.com/150/4B0082/FFFFFF?text=Regular',
+        description: 'Vé tiêu chuẩn',
+        seatInfo: 'Khu vực tự do',
+        notes: ['- Với mỗi đơn hàng khán giả được mua tối đa 5 vé', '- Vé thuộc hạng dùng không phân khu vực khán giả tối ưu ưu tiên vị trí đứng'],
         isSoldOut: false,
-      },
-      {
-        id: 'ticket2',
-        name: 'COMBO 1 REGULAR TICKET + 1 STICK',
-        price: '1.091.000 đ',
-        rawPrice: 1091000,
-        description: 'Gói combo bao gồm 1 vé thường và 1 lightstick chính hãng.',
-        detailedDescription: 'Gói ưu đãi này bao gồm 1 vé vào cửa tiêu chuẩn và 1 lightstick chính hãng của BLACKPINK.',
-        notes: [
-          '- Với mỗi đơn hàng khán giả được mua tối đa 5 vé',
-          '- Vé thuộc hạng dùng không phân khu vực khán giả tối ưu ưu tiên vị trí đứng',
-          '- Không áp dụng ưu đãi giảm giá đi kèm của blackpink hoặc đối tác',
-          '- Quà tặng: Sticker pack, phong bì, vé giấy',
-          '- Hỗ trợ LED Livecam theo dõi toàn bộ sự kiện'
-        ],
-        isSoldOut: true,
       },
       {
         id: 'ticket3',
         name: 'COMBO 10 REGULAR TICKET',
         price: '1.091.000 đ',
         rawPrice: 1091000,
-        description: 'Gói combo 10 vé thường.',
-        detailedDescription: 'Dành cho nhóm 10 người, gói này cung cấp 10 vé vào cửa tiêu chuẩn với mức giảm giá.',
-        notes: [
-          '- Với mỗi đơn hàng khán giả được mua tối đa 5 vé',
-          '- Vé thuộc hạng dùng không phân khu vực khán giả tối ưu ưu tiên vị trí đứng',
-          '- Không áp dụng ưu đãi giảm giá đi kèm của blackpink hoặc đối tác',
-          '- Quà tặng: Sticker pack, phong bì, vé giấy',
-          '- Hỗ trợ LED Livecam theo dõi toàn bộ sự kiện'
-        ],
+        image: 'https://via.placeholder.com/150/0000CD/FFFFFF?text=Combo',
+        description: 'Gói 10 vé thường',
+        seatInfo: 'Khu vực tự do',
+        notes: ['- Dành cho nhóm, tiết kiệm chi phí', '- Quà tặng đi kèm cho nhóm'],
         isSoldOut: false,
       },
       {
-        id: 'ticket4',
-        name: 'REGULAR TICKET KID',
-        price: '755.000 đ',
-        rawPrice: 755000,
-        description: 'Vé dành cho trẻ em.',
-        detailedDescription: 'Vé này dành riêng cho trẻ em tham gia sự kiện, quyền lợi tương đương vé thường.',
-        notes: [
-          '- Với mỗi đơn hàng khán giả được mua tối đa 5 vé',
-          '- Vé thuộc hạng dùng không phân khu vực khán giả tối ưu ưu tiên vị trí đứng',
-          '- Không áp dụng ưu đãi giảm giá đi kèm của blackpink hoặc đối tác',
-          '- Quà tặng: Sticker pack, phong bì, vé giấy',
-          '- Hỗ trợ LED Livecam theo dõi toàn bộ sự kiện'
-        ],
+        id: 'ticket_soldout',
+        name: 'VIP TICKET',
+        price: '2.500.000 đ',
+        rawPrice: 2500000,
+        image: 'https://via.placeholder.com/150/FFD700/000000?text=VIP',
+        description: 'Vé VIP với nhiều quyền lợi',
+        seatInfo: 'Khu vực VIP',
+        notes: ['- Gặp gỡ nghệ sĩ', '- Quà tặng độc quyền'],
         isSoldOut: true,
       },
     ],
   },
 ]);
 
-const activeSlot = ref('slot1');
 const activeTickets = ref(new Set());
-const selectedTickets = ref({
-  'slot1': {
-    'ticket1': 0,
-    'ticket3': 0
-  }
-});
+const selectedTickets = ref({}); // Bắt đầu với object rỗng
 
 onMounted(() => {
-  const allTicketIds = timeSlots.value.flatMap(slot =>
-      slot.tickets.filter(ticket => !ticket.isSoldOut).map(ticket => ticket.id)
-  );
+  const allTicketIds = timeSlots.value.reduce((acc, slot) => {
+    const availableTickets = slot.tickets.filter(ticket => !ticket.isSoldOut).map(ticket => ticket.id);
+    return acc.concat(availableTickets);
+  }, []);
   allTicketIds.forEach(id => activeTickets.value.add(id));
 });
-
-const toggleSlot = (slotId) => {
-  if (activeSlot.value === slotId) {
-  } else {
-    activeSlot.value = slotId;
-  }
-};
 
 const toggleTicketDetail = (ticketId) => {
   if (activeTickets.value.has(ticketId)) {
@@ -349,7 +261,7 @@ const updateTicketQuantity = (slotId, ticketId, change) => {
   if (!selectedTickets.value[slotId]) {
     selectedTickets.value[slotId] = {};
   }
-  let currentQuantity = selectedTickets.value[slotId][ticketId] || 0;
+  let currentQuantity = selectedTickets.value[slotId]?.[ticketId] || 0;
   let newQuantity;
   if (typeof change === 'number' && (change === 1 || change === -1)) {
     newQuantity = currentQuantity + change;
@@ -358,37 +270,27 @@ const updateTicketQuantity = (slotId, ticketId, change) => {
   } else {
     return;
   }
-  if (newQuantity < 0) {
-    newQuantity = 0;
-  }
-  if (newQuantity > 10) {
-    newQuantity = 10;
-  }
-  selectedTickets.value[slotId][ticketId] = newQuantity;
+  if (newQuantity < 0) newQuantity = 0;
+  if (newQuantity > 10) newQuantity = 10; // Giới hạn mỗi loại vé là 10
+
   if (newQuantity === 0) {
     delete selectedTickets.value[slotId][ticketId];
     if (Object.keys(selectedTickets.value[slotId]).length === 0) {
       delete selectedTickets.value[slotId];
     }
+  } else {
+    selectedTickets.value[slotId][ticketId] = newQuantity;
   }
 };
 
 const getTicketName = (slotId, ticketId) => {
-  const slot = timeSlots.value.find(s => s.id === slotId);
-  if (slot) {
-    const ticket = slot.tickets.find(t => t.id === ticketId);
-    return ticket ? ticket.name : '';
-  }
-  return '';
+  const ticket = timeSlots.value.find(s => s.id === slotId)?.tickets.find(t => t.id === ticketId);
+  return ticket ? ticket.name : '';
 };
 
 const getTicketPriceValue = (slotId, ticketId) => {
-  const slot = timeSlots.value.find(s => s.id === slotId);
-  if (slot) {
-    const ticket = slot.tickets.find(t => t.id === ticketId);
-    return ticket ? ticket.rawPrice : 0;
-  }
-  return 0;
+  const ticket = timeSlots.value.find(s => s.id === slotId)?.tickets.find(t => t.id === ticketId);
+  return ticket ? ticket.rawPrice : 0;
 };
 
 const formatPrice = (value) => {
@@ -396,103 +298,50 @@ const formatPrice = (value) => {
 };
 
 const totalPrice = computed(() => {
-  let total = 0;
-  for (const slotId in selectedTickets.value) {
-    for (const ticketId in selectedTickets.value[slotId]) {
-      const quantity = selectedTickets.value[slotId][ticketId];
-      const price = getTicketPriceValue(slotId, ticketId);
-      total += price * quantity;
-    }
-  }
-  return total;
-});
-
-const hasSelectedTickets = computed(() => {
-  for (const slotId in selectedTickets.value) {
-    for (const ticketId in selectedTickets.value[slotId]) {
-      if (selectedTickets.value[slotId][ticketId] > 0) {
-        return true;
-      }
-    }
-  }
-  return false;
+  return Object.entries(selectedTickets.value).reduce((total, [slotId, tickets]) => {
+    return total + Object.entries(tickets).reduce((slotTotal, [ticketId, quantity]) => {
+      return slotTotal + (getTicketPriceValue(slotId, ticketId) * quantity);
+    }, 0);
+  }, 0);
 });
 
 const totalSelectedItems = computed(() => {
-  let total = 0;
-  for (const slotId in selectedTickets.value) {
-    for (const ticketId in selectedTickets.value[slotId]) {
-      total += selectedTickets.value[slotId][ticketId];
-    }
-  }
-  return total;
+  return Object.values(selectedTickets.value).reduce((total, tickets) => {
+    return total + Object.values(tickets).reduce((ticketTotal, quantity) => ticketTotal + quantity, 0);
+  }, 0);
 });
 
-const getTotalQuantityForSlot = (slotId) => {
-  let total = 0;
-  if (selectedTickets.value[slotId]) {
-    for (const ticketId in selectedTickets.value[slotId]) {
-      total += selectedTickets.value[slotId][ticketId];
-    }
-  }
-  return total;
-};
+const hasSelectedTickets = computed(() => totalSelectedItems.value > 0);
 
-const getTotalPriceForSlot = (slotId) => {
-  let total = 0;
-  if (selectedTickets.value[slotId]) {
+const goToPayment = () => {
+  if (!hasSelectedTickets.value) {
+    alert("Vui lòng chọn ít nhất một vé để tiếp tục.");
+    return;
+  }
+
+  const cart = [];
+  for (const slotId in selectedTickets.value) {
     for (const ticketId in selectedTickets.value[slotId]) {
       const quantity = selectedTickets.value[slotId][ticketId];
-      const price = getTicketPriceValue(slotId, ticketId);
-      total += price * quantity;
+      if (quantity > 0) {
+        const ticketInfo = timeSlots.value.find(s => s.id === slotId)?.tickets.find(t => t.id === ticketId);
+        if (ticketInfo) {
+          for (let i = 0; i < quantity; i++) {
+            cart.push({
+              id: `${ticketInfo.id}-${i}`,
+              name: ticketInfo.name,
+              description: ticketInfo.description,
+              seatInfo: ticketInfo.seatInfo,
+              image: ticketInfo.image,
+              price: ticketInfo.rawPrice,
+            });
+          }
+        }
+      }
     }
   }
-  return total;
+
+  sessionStorage.setItem('cart', JSON.stringify(cart));
+  router.push({ name: 'PaymentPage' });
 };
 </script>
-
-<style>
-
-.event-detail-page {
-  font-family: 'Arial', sans-serif;
-  color: #333;
-}
-
-
-.mask-fade-bottom {
-  mask-image: linear-gradient(to bottom, black, transparent);
-  -webkit-mask-image: -webkit-linear-gradient(to bottom, black, transparent);
-}
-
-.expand-enter-active,
-.expand-leave-active {
-  transition: all 0.3s ease;
-  overflow: hidden;
-}
-
-.expand-enter-from,
-.expand-leave-to {
-  max-height: 0;
-  opacity: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-.expand-enter-to,
-.expand-leave-from {
-  max-height: 500px;
-  opacity: 1;
-}
-
-
-input[type='number']::-webkit-inner-spin-button,
-input[type='number']::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type='number'] {
-  -moz-appearance: textfield;
-  appearance: textfield;
-}
-</style>
