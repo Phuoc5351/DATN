@@ -168,7 +168,10 @@
             </div>
           </div>
 
-          <button class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-300 mt-4">
+          <button
+              @click="goToPayment"
+              class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-300 mt-4"
+          >
             Tiếp tục - {{ formatPrice(totalPrice) }} >>
           </button>
         </div>
@@ -190,10 +193,49 @@ const props = defineProps({
 
 const router = useRouter();
 
-// Dữ liệu cho các sự kiện đề xuất (Không còn được sử dụng trong template mới này)
+
+const goToPayment = () => {
+  // 1. Tạo một mảng để chứa các mục trong giỏ hàng
+  const cartItems = [];
+
+  // 2. Lặp qua các vé đã chọn trong `selectedTickets`
+  for (const slotId in selectedTickets.value) {
+    for (const ticketId in selectedTickets.value[slotId]) {
+      const quantity = selectedTickets.value[slotId][ticketId];
+      if (quantity > 0) {
+        // Tìm thông tin chi tiết của vé từ `timeSlots`
+        const slot = timeSlots.value.find(s => s.id === slotId);
+        const ticketInfo = slot.tickets.find(t => t.id === ticketId);
+
+        // Thêm vào giỏ hàng với cấu trúc dữ liệu mà trang Payment mong muốn
+        cartItems.push({
+          id: `${ticketInfo.id}-${slotId}`, // Tạo id duy nhất cho từng mục
+          name: ticketInfo.name,
+          // Mô tả bao gồm số lượng và tên sự kiện
+          description: `Số lượng: ${quantity}`,
+          seatInfo: `Vé sự kiện "${slot.time.split(',')[0]}"`,
+          // Tổng giá cho loại vé này (giá vé * số lượng)
+          price: ticketInfo.rawPrice * quantity,
+          // Bạn có thể thêm ảnh vé ở đây nếu có
+          image: 'https://via.placeholder.com/80x80.png?text=Ticket',
+        });
+      }
+    }
+  }
+
+  // Nếu chưa chọn vé nào thì thông báo
+  if (cartItems.length === 0) {
+    alert('Vui lòng chọn ít nhất 1 vé để tiếp tục!');
+    return;
+  }
+
+  sessionStorage.setItem('cart', JSON.stringify(cartItems));
+
+  router.push({ name: 'PaymentPage' });
+};
+
 const suggestedEvents = ref([]);
 
-// Cấu trúc dữ liệu cho các khung giờ và vé
 const timeSlots = ref([
   {
     id: 'slot1',
@@ -266,48 +308,26 @@ const timeSlots = ref([
       },
     ],
   },
-  // Các slot khác có thể thêm vào đây nếu cần
 ]);
 
-// Mặc định mở slot đầu tiên
 const activeSlot = ref('slot1');
-
-// activeTickets sẽ là một Set để lưu trữ các ID của các vé đang mở chi tiết.
-// onMounted hook sẽ đảm bảo các vé được mở mặc định khi component tải.
 const activeTickets = ref(new Set());
-
-// selectedTickets với số lượng vé mặc định như hình ảnh
 const selectedTickets = ref({
   'slot1': {
-    'ticket1': 0, // REGULAR TICKET: 9 vé
-    'ticket3': 0  // COMBO 10 REGULAR TICKET: 1 vé
+    'ticket1': 0,
+    'ticket3': 0
   }
 });
 
-// Hàm này sẽ chạy sau khi component được mount vào DOM
 onMounted(() => {
-  // Lấy ID của tất cả các vé không hết hạn
   const allTicketIds = timeSlots.value.flatMap(slot =>
       slot.tickets.filter(ticket => !ticket.isSoldOut).map(ticket => ticket.id)
   );
-  // Thêm tất cả các ID này vào Set để chúng được mở mặc định
   allTicketIds.forEach(id => activeTickets.value.add(id));
-
-  // Nếu bạn chỉ muốn các vé có trong selectedTickets được mở mặc định,
-  // hãy thay thế logic trên bằng:
-  // for (const slotId in selectedTickets.value) {
-  //   for (const ticketId in selectedTickets.value[slotId]) {
-  //     activeTickets.value.add(ticketId);
-  //   }
-  // }
 });
 
-
 const toggleSlot = (slotId) => {
-  // Logic này không ảnh hưởng đến việc mở/thu gọn chi tiết vé, chỉ thay đổi slot hiển thị
   if (activeSlot.value === slotId) {
-    // Để giữ slot mở nếu click lại (hoặc đặt null nếu muốn thu gọn)
-    // activeSlot.value = null;
   } else {
     activeSlot.value = slotId;
   }
@@ -315,9 +335,9 @@ const toggleSlot = (slotId) => {
 
 const toggleTicketDetail = (ticketId) => {
   if (activeTickets.value.has(ticketId)) {
-    activeTickets.value.delete(ticketId); // Nếu đang mở thì đóng lại
+    activeTickets.value.delete(ticketId);
   } else {
-    activeTickets.value.add(ticketId); // Nếu đang đóng thì mở ra
+    activeTickets.value.add(ticketId);
   }
 };
 
@@ -326,70 +346,32 @@ const getTicketStatusClass = (isSoldOut) => {
 };
 
 const updateTicketQuantity = (slotId, ticketId, change) => {
-  // Nếu suất chiếu (slotId) chưa có trong danh sách đã chọn, hãy tạo nó.
   if (!selectedTickets.value[slotId]) {
     selectedTickets.value[slotId] = {};
   }
-
-  // Lấy số lượng hiện tại của vé, nếu chưa có thì mặc định là 0.
   let currentQuantity = selectedTickets.value[slotId][ticketId] || 0;
   let newQuantity;
-
-  // Xử lý việc tăng/giảm số lượng hoặc đặt một giá trị cụ thể.
   if (typeof change === 'number' && (change === 1 || change === -1)) {
-    // Tăng hoặc giảm 1
     newQuantity = currentQuantity + change;
   } else if (typeof change === 'number' && change >= 0) {
-    // Đặt một số lượng cụ thể (ví dụ: từ một ô input)
     newQuantity = change;
   } else {
-    // Nếu giá trị 'change' không hợp lệ, không làm gì cả.
     return;
   }
-
-  // --- LOGIC ĐÃ ĐƯỢC ĐƠN GIẢN HÓA ---
-
-  // 1. Đảm bảo số lượng không bao giờ nhỏ hơn 0.
   if (newQuantity < 0) {
     newQuantity = 0;
   }
-
-  // 2. Áp dụng giới hạn tối đa 10 vé cho TẤT CẢ các loại vé.
   if (newQuantity > 10) {
     newQuantity = 10;
   }
-
-  // Cập nhật số lượng mới vào danh sách đã chọn.
   selectedTickets.value[slotId][ticketId] = newQuantity;
-
-  // Nếu số lượng vé trở về 0, hãy xóa nó khỏi danh sách.
   if (newQuantity === 0) {
     delete selectedTickets.value[slotId][ticketId];
-    // Nếu không còn vé nào trong suất chiếu, hãy xóa luôn suất chiếu đó.
     if (Object.keys(selectedTickets.value[slotId]).length === 0) {
       delete selectedTickets.value[slotId];
     }
   }
 };
-  // Giới hạn chung 5 vé mỗi đơn hàng nếu áp dụng cho mọi loại vé và không có combo đặc biệt.
-  // Nếu có, logic này phức tạp hơn và cần kiểm tra tổng số lượng đã chọn.
-//   const maxPerOrderNote = timeSlots.value.find(s => s.id === slotId)?.tickets.find(t => t.id === ticketId)?.notes.find(note => note.includes('tối đa'));
-//   if (maxPerOrderNote) {
-//     const maxLimit = parseInt(maxPerOrderNote.match(/\d+/)[0]);
-//     if (newQuantity > maxLimit) {
-//       newQuantity = maxLimit;
-//     }
-//   }
-//
-//   selectedTickets.value[slotId][ticketId] = newQuantity;
-//
-//   if (newQuantity === 0) {
-//     delete selectedTickets.value[slotId][ticketId];
-//     if (Object.keys(selectedTickets.value[slotId]).length === 0) {
-//       delete selectedTickets.value[slotId];
-//     }
-//   }
-// };
 
 const getTicketName = (slotId, ticketId) => {
   const slot = timeSlots.value.find(s => s.id === slotId);
@@ -436,7 +418,6 @@ const hasSelectedTickets = computed(() => {
   return false;
 });
 
-// Computed property để tính tổng số lượng các item đã chọn
 const totalSelectedItems = computed(() => {
   let total = 0;
   for (const slotId in selectedTickets.value) {
@@ -447,7 +428,6 @@ const totalSelectedItems = computed(() => {
   return total;
 });
 
-// Hàm để lấy tổng số lượng vé trong một slot (nếu cần hiển thị)
 const getTotalQuantityForSlot = (slotId) => {
   let total = 0;
   if (selectedTickets.value[slotId]) {
@@ -458,7 +438,6 @@ const getTotalQuantityForSlot = (slotId) => {
   return total;
 };
 
-// Hàm để lấy tổng giá vé trong một slot (nếu cần hiển thị)
 const getTotalPriceForSlot = (slotId) => {
   let total = 0;
   if (selectedTickets.value[slotId]) {
@@ -473,13 +452,13 @@ const getTotalPriceForSlot = (slotId) => {
 </script>
 
 <style>
-/* Base Styles */
+
 .event-detail-page {
-  font-family: 'Arial', sans-serif; /* Hoặc font bạn sử dụng */
+  font-family: 'Arial', sans-serif;
   color: #333;
 }
 
-/* Transitions for expand/collapse */
+
 .mask-fade-bottom {
   mask-image: linear-gradient(to bottom, black, transparent);
   -webkit-mask-image: -webkit-linear-gradient(to bottom, black, transparent);
@@ -501,11 +480,11 @@ const getTotalPriceForSlot = (slotId) => {
 
 .expand-enter-to,
 .expand-leave-from {
-  max-height: 500px; /* Adjust as needed, sufficiently large */
+  max-height: 500px;
   opacity: 1;
 }
 
-/* Hide number input arrows (spin buttons) */
+
 input[type='number']::-webkit-inner-spin-button,
 input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -513,7 +492,7 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 input[type='number'] {
-  -moz-appearance: textfield; /* For Firefox */
-  appearance: textfield; /* Standard property */
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 </style>
