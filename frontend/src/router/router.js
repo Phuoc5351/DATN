@@ -14,6 +14,8 @@ import Step3 from "@/components/Organizer/Step3.vue";
 import Step2 from "@/components/Organizer/Step2.vue";
 import Step1 from "@/components/Organizer/Step1.vue";
 import Step4 from "@/components/Organizer/Step4.vue";
+import PaymentPage from "@/components/BookingPage/PaymentPage.vue";
+import PaymentSuccess from "@/components/BookingPage/PaymentSuccess.vue";
 const routes = [
     {
         path: '/',
@@ -76,6 +78,20 @@ const routes = [
         component: EventDetail,
         props: true,
         meta: { layout: 'BookingLayout' }
+    },
+    {
+        path: '/PaymentPage',
+        name: 'PaymentPage',
+        component: PaymentPage,
+        props: true,
+        meta: { layout: 'HomeLayout' }
+    },
+    {
+        path: '/PaymentSuccess',
+        name: 'PaymentSuccess',
+        component: PaymentSuccess,
+        props: true,
+        meta: { layout: 'HomeLayout' }
     },
     {
         path: '/CreateEvent',
