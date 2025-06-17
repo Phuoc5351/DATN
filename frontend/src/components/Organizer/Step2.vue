@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-gray-100 p-4 sm:p-6 md:p-8 font-sans min-h-screen">
+  <form @submit.prevent>
 
     <div class="max-w-5xl mx-auto">
       <header class="flex flex-col sm:flex-row justify-between items-center mb-6">
@@ -105,56 +105,135 @@
           @save="handleSaveTicket"
       />
     </Transition>
-  </div>
+    <div class="mt-10 pt-6 border-t border-gray-200 flex justify-between items-center">
+      <button
+          type="button"
+          @click="goToStep1"
+          class="px-6 py-3 font-semibold text-gray-700 bg-gray-100 rounded-lg shadow-sm hover:bg-gray-200 transition-all duration-150"
+      >
+        &larr; Quay lại (Step 1)
+      </button>
+      <button
+          type="button"
+          @click="saveAndContinue"
+          class="px-6 py-3 font-semibold text-white bg-purple-600 rounded-lg shadow-md border-b-4 border-purple-800 hover:bg-purple-700 active:translate-y-0.5 active:border-b-2 transition-all duration-150"
+      >
+        Lưu & Tiếp tục (Step 3) &rarr;
+      </button>
+    </div>
+  </form>
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, onMounted } from 'vue'; // MỚI: Thêm onMounted
+import { useRouter } from 'vue-router'; // MỚI: Thêm useRouter để điều hướng
 import TicketTypeModal from '../TicketTypeModal.vue';
 
+// MỚI: Khởi tạo router
+const router = useRouter();
+
 const uid = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+
+// State của component
+const sessions = ref([]); // MỚI: Khởi tạo là mảng rỗng, sẽ được điền bởi onMounted
 const activeSessionId = ref(null);
 const activeTimeSlotId = ref(null);
 const editingSessionId = ref(null);
 const sessionNameInput = ref(null);
+const isModalOpen = ref(false);
+const activeTimeSlot = ref(null);
 
-const sessions = ref([
-  {
-    id: uid(), name: 'Suất diễn chính',
-    timeSlots: [{ id: uid(), startTime: '', endTime: '', ticketTypes: [] }]
+// =================================================================
+// MỚI: LOGIC LƯU VÀ TẢI DỮ LIỆU (GIỐNG HỆT STEP 1)
+// =================================================================
+
+const loadDataFromLocalStorage = () => {
+  const savedData = localStorage.getItem('eventFormData');
+  let hasExistingData = false;
+
+  if (savedData) {
+    const allData = JSON.parse(savedData);
+    if (allData.step2 && allData.step2.length > 0) {
+      sessions.value = allData.step2;
+      hasExistingData = true;
+    }
   }
-]);
-if (sessions.value.length > 0) {
-  activeSessionId.value = sessions.value[0].id;
-  if (sessions.value[0].timeSlots.length > 0) {
-    activeTimeSlotId.value = sessions.value[0].timeSlots[0].id;
+
+  // Nếu không có dữ liệu cũ, tạo một suất diễn mặc định
+  if (!hasExistingData) {
+    sessions.value = [{
+      id: uid(),
+      name: 'Suất diễn chính',
+      timeSlots: [{ id: uid(), startTime: '', endTime: '', ticketTypes: [] }]
+    }];
   }
-}
+
+  // Thiết lập session / timeslot được active sau khi tải dữ liệu
+  if (sessions.value.length > 0) {
+    activeSessionId.value = sessions.value[0].id;
+    if (sessions.value[0].timeSlots.length > 0) {
+      activeTimeSlotId.value = sessions.value[0].timeSlots[0].id;
+    }
+  }
+};
+
+const saveAndContinue = () => {
+  // Đọc dữ liệu tổng từ localStorage
+  const savedData = localStorage.getItem('eventFormData');
+  let allData = savedData ? JSON.parse(savedData) : {};
+
+  // Cập nhật dữ liệu của Step 2
+  allData.step2 = sessions.value;
+
+  // Lưu lại vào localStorage
+  localStorage.setItem('eventFormData', JSON.stringify(allData));
+
+  // Thông báo và chuyển sang Step 3
+  alert('Đã lưu dữ liệu Step 2! Đang chuyển sang Step 3...');
+  router.push({ name: 'Step3' }); // Giả sử route của bạn có tên là 'Step3'
+};
+
+const goToStep1 = () => {
+  // Có thể lưu lại trước khi quay về
+  const savedData = localStorage.getItem('eventFormData');
+  let allData = savedData ? JSON.parse(savedData) : {};
+  allData.step2 = sessions.value;
+  localStorage.setItem('eventFormData', JSON.stringify(allData));
+
+  router.push({ name: 'Step1' }); // Giả sử route của bạn có tên là 'Step1'
+};
+
+// Tải dữ liệu khi component được mount
+onMounted(() => {
+  loadDataFromLocalStorage();
+});
+
+
+// =================================================================
+// CÁC HÀM XỬ LÝ GIAO DIỆN (GIỮ NGUYÊN)
+// =================================================================
+
 const getNextSessionNumber = () => {
-
   const existingNumbers = sessions.value
       .map(session => {
         const match = session.name.match(/\d+$/);
         return match ? parseInt(match[0], 10) : 0;
       });
-  if (existingNumbers.length === 0) {
-    return 1;
-  }
-  const maxNumber = Math.max(...existingNumbers);
-  return maxNumber + 1;
+  if (existingNumbers.length === 0) return 1;
+  return Math.max(...existingNumbers) + 1;
 };
 
 const addSession = () => {
-  const newNumber = getNextSessionNumber();
   const newSession = {
     id: uid(),
-    name: `Suất diễn ${newNumber}`,
+    name: `Suất diễn ${getNextSessionNumber()}`,
     timeSlots: [{ id: uid(), startTime: '', endTime: '', ticketTypes: [] }]
   };
   sessions.value.push(newSession);
   activeSessionId.value = newSession.id;
   activeTimeSlotId.value = newSession.timeSlots[0].id;
 };
+
 const toggleSession = (sessionId) => {
   if (editingSessionId.value === sessionId) return;
   activeSessionId.value = activeSessionId.value === sessionId ? null : sessionId;
@@ -164,13 +243,11 @@ const toggleTimeSlot = (timeSlotId) => { activeTimeSlotId.value = activeTimeSlot
 const startEditingSessionName = async (session) => {
   editingSessionId.value = session.id;
   await nextTick();
-  if (sessionNameInput.value) {
-    sessionNameInput.value.focus();
+  if (sessionNameInput.value && sessionNameInput.value[0]) {
+    sessionNameInput.value[0].focus();
   }
 };
-const finishEditingSessionName = () => {
-  editingSessionId.value = null;
-};
+const finishEditingSessionName = () => { editingSessionId.value = null; };
 
 const getSessionTimeRange = (session) => {
   const timeSlots = session.timeSlots;
@@ -183,6 +260,7 @@ const getSessionTimeRange = (session) => {
     if (isNaN(date.getTime())) return '...';
     return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
+  if (minDate.getTime() === maxDate.getTime()) return formatDate(minDate);
   return `Từ ${formatDate(minDate)} - Đến ${formatDate(maxDate)}`;
 };
 
@@ -195,13 +273,11 @@ const addTimeSlot = (session) => {
 const removeSession = (sessionId) => { sessions.value = sessions.value.filter(s => s.id !== sessionId); };
 const removeTimeSlot = (session, timeSlotId) => { session.timeSlots = session.timeSlots.filter(ts => ts.id !== timeSlotId); };
 const removeTicketType = (timeSlot, ticketId) => { timeSlot.ticketTypes = timeSlot.ticketTypes.filter(t => t.id !== ticketId); };
-const isModalOpen = ref(false);
-const activeTimeSlot = ref(null);
+
 const openAddTicketModal = (timeSlot) => { activeTimeSlot.value = timeSlot; isModalOpen.value = true; };
 const handleSaveTicket = (newTicketData) => { if (activeTimeSlot.value) { activeTimeSlot.value.ticketTypes.push({ id: uid(), ...newTicketData }); } isModalOpen.value = false; };
 
 </script>
-
 <style scoped>
 .font-sans { font-family: 'Inter', sans-serif; }
 .modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.3s ease; }

@@ -29,26 +29,139 @@
       </nav>
     </aside>
 
-    <div class="flex-1 flex flex-col overflow-y-auto">
-      <CreateEventHeader :current-step="currentStep"
-                         class="sticky top-0 z-40"/>
+    <div v-if="isLoading" class="flex-1 flex items-center justify-center">
+      <p class="text-gray-500">Đang tải dữ liệu sự kiện...</p>
+    </div>
 
-      <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
+    <div v-else class="flex-1 flex flex-col overflow-y-auto">
+      <CreateEventHeader
+          :current-step="currentStep"
+          :event-id="props.id"  @go-to-next="handleSaveAndGoNext"
+          @go-to-previous="handleSaveAndGoBack"
+          @finish="handleFinish"
+          class="sticky top-0 z-40"
+      />
+
+      <main class="p-4 sm:p-6 md:p-8">
+        <router-view  v-slot="{ Component }">
+          <transition name="fade" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
+      </main>
     </div>
 
   </div>
 </template>
 
+
 <script setup>
-// Imports
-import { computed } from 'vue';
-import { useRoute } from 'vue-router';
-import CreateEventHeader from './CreateEventHeader.vue'; // Component header
+import { ref, computed, onMounted, provide, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import CreateEventHeader from '../Organizer/CreateEventHeader.vue'; // Sửa lại đường dẫn nếu cần
+import api from '../services/api.js';
+
+// --- KHỞI TẠO CƠ BẢN ---
+const props = defineProps({
+  id: { // Nhận ID từ router
+    type: String,
+    required: true
+  }
+});
 const route = useRoute();
+const router = useRouter();
+
+// --- QUẢN LÝ STATE ---
+const isLoading = ref(true);
+const eventData = ref({}); // State tổng, chứa dữ liệu của sự kiện đang chỉnh sửa
+provide('eventData', eventData); // Cung cấp state này cho các component Step con
+
+// Key động cho Local Storage, tự thay đổi khi ID thay đổi
+const storageKey = computed(() => `eventFormData_${props.id}`);
+
+// --- LOGIC TẢI DỮ LIỆU ---
+
+// Hàm tải dữ liệu thống nhất: Ưu tiên Local Storage, nếu không có thì mới gọi API
+const fetchDataForEvent = async (eventId) => {
+  isLoading.value = true;
+  eventData.value = {}; // Xóa sạch dữ liệu cũ để tránh hiển thị nhầm trong lúc tải
+
+  const localData = localStorage.getItem(`eventFormData_${eventId}`); // Dùng key tương ứng với eventId
+
+  if (localData) {
+    console.log(`Tải dữ liệu cho sự kiện ${eventId} từ Local Storage.`);
+    eventData.value = JSON.parse(localData);
+    isLoading.value = false;
+  } else {
+    console.log(`Tải dữ liệu cho sự kiện ${eventId} từ Database qua API.`);
+    try {
+      const response = await api.getEvent(eventId);
+      eventData.value = response.data;
+    } catch (error) {
+      console.error("Không thể tải dữ liệu sự kiện:", error);
+      alert("Sự kiện không tồn tại hoặc có lỗi xảy ra.");
+      router.push('/');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+};
+
+// `onMounted` chỉ chạy 1 lần khi component được tạo, dùng để tải dữ liệu ban đầu
+onMounted(() => {
+  fetchDataForEvent(props.id);
+});
+
+// `watch` sẽ theo dõi sự thay đổi của `props.id` khi bạn chuyển trang
+// (ví dụ từ /11 -> /12) và gọi lại hàm tải dữ liệu mới
+watch(() => props.id, (newId) => {
+  if (newId) {
+    fetchDataForEvent(newId);
+  }
+});
+
+
+// --- LOGIC LƯU DỮ LIỆU VÀ ĐIỀU HƯỚNG ---
+
+// Hàm này chỉ lưu dữ liệu tạm thời vào Local Storage
+const saveCurrentData = () => {
+  try {
+    localStorage.setItem(storageKey.value, JSON.stringify(eventData.value));
+    console.log(`Đã lưu tạm thời vào Local Storage cho key: ${storageKey.value}`);
+  } catch (error) {
+    console.error("Lỗi khi lưu vào Local Storage:", error);
+    alert("Lưu dữ liệu tạm thời thất bại.");
+  }
+};
+
+// Xử lý khi nhấn "Tiếp tục": Lưu vào local rồi chuyển trang
+const handleSaveAndGoNext = () => {
+  saveCurrentData();
+  const nextStepNumber = currentStep.value + 1;
+  router.push({ name: `Step${nextStepNumber}`, params: { id: props.id } });
+};
+
+// Xử lý khi nhấn "Quay lại": Lưu vào local rồi chuyển trang
+const handleSaveAndGoBack = () => {
+  saveCurrentData();
+  const prevStepNumber = currentStep.value - 1;
+  router.push({ name: `Step${prevStepNumber}`, params: { id: props.id } });
+};
+
+// Xử lý khi nhấn "Hoàn thành": Lưu vào DATABASE và xóa local
+const handleFinish = async () => {
+  try {
+    await api.updateEvent(props.id, eventData.value); // Lưu vào DB
+    localStorage.removeItem(storageKey.value); // Xóa bản nháp local
+    alert("Chúc mừng! Sự kiện đã được lưu vào database thành công.");
+    router.push('/');
+  } catch (error) {
+    console.error("Lỗi khi lưu dữ liệu cuối cùng:", error);
+    alert("Lưu dữ liệu vào database thất bại, vui lòng thử lại.");
+  }
+};
+
+// --- LOGIC HIỂN THỊ ---
 const currentStep = computed(() => {
   const stepName = route.name;
   if (typeof stepName === 'string' && stepName.startsWith('Step')) {
