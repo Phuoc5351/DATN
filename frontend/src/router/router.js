@@ -101,34 +101,26 @@ const routes = [
         meta: { layout: 'BookingLayout' }
     },
     {
-        path: '/CreateEvent',
-        component: CreateEvent, //
-        children: [
-            {
-                path: '/CreateEvent/step1',
-                name: 'Step1',
-                component: Step1,
-            },
-            {
-                path: '/CreateEvent/step2',
-                name: 'Step2',
-                component: Step2,
-            },
-            {
-                path: '/CreateEvent/step3',
-                name: 'Step3',
-                component: Step3,
-            },
-            {
-                path: 'step4',
-                name: 'Step4',
-                component: Step4, // <-- Thêm route cho Step 4
-            },
-
-        ],
+        path: '/create-event/:id', // <-- :id là placeholder
+        component: CreateEvent,
         props: true,
-        meta: { layout: 'BookingLayout' }
+        meta: { layout: 'BookingLayout' },
+        children: [
+            // Thay thế :id bằng ID thật khi điều hướng
+            { path: 'step-1', name: 'Step1', component: Step1 }, // <-- name: 'Step1'
+            { path: 'step-2', name: 'Step2', component: Step2 },
+            { path: 'step-3', name: 'Step3', component: Step3 },
+            { path: 'step-4', name: 'Step4', component: Step4 },
+        ]
     },
+    {
+        path: '/CreateEvent',
+        redirect: to => {
+            // Logic tạo sự kiện mới sẽ được xử lý trong component hoặc store
+            // Ở đây chỉ là một placeholder, logic thật sẽ nằm ở nơi gọi
+            return { path: '/CreateEvent/:id' }; // Hoặc trang dashboard
+        }
+    }
 ];
 
 const router = createRouter({

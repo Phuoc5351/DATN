@@ -14,7 +14,13 @@
             <router-link to="/" class="text-gray-700 hover:text-indigo-600 font-medium transition-colors">Trang chủ</router-link>
             <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium transition-colors">Sự kiện</a>
             <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium transition-colors">Vé đã mua</a>
-            <router-link to="/CreateEvent/step1" class="text-gray-700 hover:text-indigo-600 font-medium transition-colors">Tổ chức sự kiện</router-link>
+            <button
+                @click="handleCreateEvent"
+                :disabled="isCreating"
+                class="text-gray-700 hover:text-indigo-600 font-medium px-2 py-1 disabled:text-gray-400"
+            >
+              {{ isCreating ? 'Đang tạo...' : 'Tổ chức sự kiện' }}
+            </button>
           </div>
         </div>
 
@@ -57,19 +63,15 @@
           <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium px-2 py-1">Trang chủ</a>
           <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium px-2 py-1">Sự kiện</a>
           <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium px-2 py-1">Vé đã mua</a>
-          <router-link
-              :to="`/CreateEvent/step1`"
-              class="text-gray-700 hover:text-indigo-600 font-medium px-2 py-1"
+          <button
+              @click="handleCreateEvent"
+              :disabled="isCreating"
+              class="text-gray-700 hover:text-indigo-600 font-medium px-2 py-1 disabled:text-gray-400"
           >
-            Tổ chức sự kiện
-          </router-link>
+            {{ isCreating ? 'Đang tạo...' : 'Tổ chức sự kiện' }}
+          </button>
         </div>
-        <router-link
-            :to="`/CreateEvent/step1`"
-            class="text-gray-700 hover:text-indigo-600 font-medium px-2 py-1"
-        >
-          Tổ chức sự kiện
-        </router-link>
+
       </div>
 
     </div>
@@ -80,4 +82,39 @@
 import { ref } from 'vue'
 
 const isMenuOpen = ref(false)
+import { useRouter } from 'vue-router';
+import api from '../components/services/api.js'; // Đảm bảo đường dẫn này đúng
+
+const router = useRouter();
+const isCreating = ref(false);
+
+const handleCreateEvent = async () => {
+  if (isCreating.value) return;
+
+  isCreating.value = true;
+  try {
+    // Bước 1: Vẫn gọi API để tạo bản nháp và lấy ID mới như cũ
+    const response = await api.createEvent();
+    const newEventId = response.data.eventId;
+
+    if (!newEventId) {
+      throw new Error("Không nhận được ID sự kiện từ server.");
+    }
+
+    // Bước 2: Dùng router.resolve để lấy đường dẫn URL đầy đủ
+    const routeData = router.resolve({
+      name: 'Step1', // Tên route của step đầu tiên
+      params: { id: newEventId }
+    });
+
+    // Bước 3: Dùng window.open để mở URL đó trong một tab mới
+    window.open(routeData.href, '_blank');
+
+  } catch (error) {
+    console.error("Lỗi khi tạo sự kiện mới:", error);
+    alert("Không thể tạo sự kiện mới, vui lòng thử lại.");
+  } finally {
+    isCreating.value = false;
+  }
+};
 </script>

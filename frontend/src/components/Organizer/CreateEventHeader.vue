@@ -3,13 +3,8 @@
     <div class="flex items-center justify-between max-w-screen-xl mx-auto gap-8">
 
       <div class="flex-shrink-0 w-28 text-left">
-        <button
-            @click="goToPreviousStep"
-            class="px-5 py-2.5 font-semibold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-all duration-200"
-            :class="[currentStep > 1 ? 'opacity-100 visible' : 'opacity-0 invisible']"
-        >
-          Quay lại
-        </button>
+        <button @click="$emit('go-to-previous')" class="px-5 py-2.5 font-semibold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-all duration-200"
+                :class="[currentStep > 1 ? 'opacity-100 visible' : 'opacity-0 invisible']">Quay lại</button>
       </div>
 
       <div class="flex-grow">
@@ -52,13 +47,12 @@
 
       <div class="flex-shrink-0 w-28 text-right">
         <button
-            @click="goToNextStep"
+            @click="handleNextClick"
             class="px-5 py-2.5 font-semibold text-white bg-purple-600 rounded-lg shadow-md border-b-4 border-purple-800 hover:bg-purple-700 active:translate-y-0.5 active:border-b-2 transition-all duration-150"
         >
           {{ currentStep < steps.length ? 'Tiếp tục' : 'Hoàn thành' }}
         </button>
       </div>
-
     </div>
   </header>
 </template>
@@ -69,13 +63,7 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
-const props = defineProps({
-  currentStep: {
-    type: Number,
-    required: true,
-    default: 1,
-  },
-});
+
 const steps = ref([
   { id: 1, name: 'Thông tin sự kiện' },
   { id: 2, name: 'Thời gian & Loại vé' },
@@ -91,18 +79,23 @@ const progressWidth = computed(() => {
   return `${Math.min(percentage, 100)}%`;
 });
 
-const goToNextStep = () => {
-  const nextStep = props.currentStep + 1;
-  if (nextStep <= steps.value.length) {
-    router.push({ name: `Step${nextStep}` });
+const props = defineProps({
+  currentStep: { type: Number, required: true },
+  eventId: { type: String, required: true }
+});
+
+// emit các sự kiện để component cha xử lý
+const emit = defineEmits(['goToNext', 'goToPrevious', 'finish']);
+
+
+
+
+
+const handleNextClick = () => {
+  if (props.currentStep < steps.value.length) {
+    emit('goToNext');
   } else {
-    console.log('Hoàn thành!');
-  }
-};
-const goToPreviousStep = () => {
-  const prevStep = props.currentStep - 1;
-  if (prevStep >= 1) {
-    router.push({ name: `Step${prevStep}` });
+    emit('finish');
   }
 };
 </script>
